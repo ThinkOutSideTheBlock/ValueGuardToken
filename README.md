@@ -1,4 +1,4 @@
-# 🪙 ValueGuard Token (VGT)
+# 🛡️ ValueGuard Token (VGT)
 
 ### **A blockchain-based token designed to protect users’ purchasing power by backing its value with a diversified basket of real-world assets.**  
 
