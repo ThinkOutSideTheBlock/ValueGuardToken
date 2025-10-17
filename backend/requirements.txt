@@ -1,1 +1,4 @@
-Django=5.2.7
+Django>=5.2.7
+djangorestframework
+djangorestframework-simplejwt
+eth-account
