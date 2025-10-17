@@ -1,0 +1,29 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.sqlite3
+.env
+!.env.example !.env.example.*
+postgres_data/
+
+# Ignore log files
+logs/
+
+tmp/
+*.log
+.DS_Store
+.idea/
+.vscode/
+coverage
+htmlcov/
+.tox/
+pytest_cache/
+.coverage
+migrations/
+staticfiles/
+media/
+celerybeat-schedule
+instance/
+*.pot
+*.mo
