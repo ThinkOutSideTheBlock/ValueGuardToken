@@ -16,3 +16,4 @@ whitenoise[brotli]
 python-dotenv
 gevent
 psycopg2-binary
+web3

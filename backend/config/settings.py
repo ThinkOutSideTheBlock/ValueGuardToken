@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     # Local apps
     'apps.core',
     'apps.users',
+    'apps.gmx',
 ]
 
 MIDDLEWARE = [
@@ -392,6 +393,13 @@ else:
     # Production MUST have a CACHE_URL.
     raise ImproperlyConfigured("CACHE_URL environment variable is required in production.")
 
+# ==============================================================================
+# BLOCKCHAIN SETTINGS
+# ==============================================================================
+NODE_RPC_URL = os.getenv("NODE_RPC_URL")
+if not NODE_RPC_URL:
+    raise ImproperlyConfigured("NODE_RPC_URL environment variable is required.")
+
 
 # ==============================================================================
 # STARTUP CONFIGURATION SUMMARY
@@ -432,3 +440,4 @@ if IS_MAIN_PROCESS:
     print(f"[CONFIG] Cache Backend:        {cache_backend}")
     print(f"[CONFIG] CORS_ALLOWED_ORIGINS:{_CORS_ALLOWED_ORIGINS}")
     print("-" * 60)
+
