@@ -27,3 +27,5 @@ celerybeat-schedule
 instance/
 *.pot
 *.mo
+
+/env/

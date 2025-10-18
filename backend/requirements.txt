@@ -2,3 +2,17 @@ Django>=5.2.7
 djangorestframework
 djangorestframework-simplejwt
 eth-account
+Pillow
+drf-spectacular
+celery
+redis
+dj-database-url
+django-filter
+structlog
+django-redis
+django-cors-headers
+gunicorn
+whitenoise[brotli]
+python-dotenv
+gevent
+psycopg2-binary
