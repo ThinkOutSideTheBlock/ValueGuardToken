@@ -17,3 +17,4 @@ python-dotenv
 gevent
 psycopg2-binary
 web3
+requests

@@ -5,6 +5,7 @@ from django.core.exceptions import ImproperlyConfigured
 import dj_database_url
 import structlog
 from corsheaders.defaults import default_headers
+from celery.schedules import crontab
 
 # ==============================================================================
 # CORE PATHS & SETTINGS
@@ -71,6 +72,7 @@ INSTALLED_APPS = [
     'apps.core',
     'apps.users',
     'apps.gmx',
+    'apps.crypto',
 ]
 
 MIDDLEWARE = [
@@ -370,6 +372,7 @@ SIMPLE_JWT = {
 # CACHING CONFIGURATION
 # ==============================================================================
 CACHE_URL = os.getenv('CACHE_URL')
+HOT_WALLET_PRIVATE_KEY = os.getenv("HOT_WALLET_PRIVATE_KEY")
 
 if CACHE_URL:
     CACHES = {
@@ -396,9 +399,18 @@ else:
 # ==============================================================================
 # BLOCKCHAIN SETTINGS
 # ==============================================================================
-NODE_RPC_URL = os.getenv("NODE_RPC_URL")
-if not NODE_RPC_URL:
-    raise ImproperlyConfigured("NODE_RPC_URL environment variable is required.")
+
+CELERY_BEAT_SCHEDULE = {
+    'update-pyth-prices-every-minute': {
+        'task': 'gmx.update_pyth_prices',
+        'schedule': 60.0,
+    },
+    'update-chainlink-eth-prices-every-5-minutes': {
+        'task': 'crypto.update_chainlink_prices', 
+        'schedule': crontab(minute='*/5'),  
+        'kwargs': {'network': 'ETHEREUM'}
+    },
+}
 
 
 # ==============================================================================

@@ -1,29 +1,40 @@
+# apps/gmx/models.py
+
 from django.db import models
 from django.utils import timezone
 
 class Commodity(models.Model):
     """
     Stores information about each commodity supported by the protocol.
+    The source of truth for commodities is the COMMODITY_PYTH_IDS list.
     """
-    COMMODITY_CHOICES = [
-        ('GOLD', 'Gold'),
-        ('OIL', 'Crude Oil'),
-        ('EUR', 'Euro'),
-        ('JPY', 'Japanese Yen'),
-        ('WHEAT', 'Wheat'),
-        ('COPPER', 'Copper'),
-    ]
+    # The symbol is the primary key and stores the full, unambiguous Pyth identifier.
+    symbol = models.CharField(
+        max_length=100, 
+        primary_key=True, 
+        help_text="The full Pyth Network symbol (e.g., 'Metal.XAU/USD')."
+    )
+    
+    current_price = models.DecimalField(
+        max_digits=18, 
+        decimal_places=8, 
+        default=0.0, 
+        help_text="The latest price from the oracle."
+    )
+    
+    last_price_update = models.DateTimeField(
+        null=True, 
+        blank=True, 
+        help_text="Timestamp of the last successful price update."
+    )
 
-    symbol = models.CharField(max_length=10, unique=True, choices=COMMODITY_CHOICES, help_text="The symbol of the commodity (e.g., GOLD).")
-    name = models.CharField(max_length=50, help_text="The full name of the commodity (e.g., Gold).")
-    current_price = models.DecimalField(max_digits=18, decimal_places=8, default=0.0, help_text="The latest price from the oracle.")
-    last_price_update = models.DateTimeField(null=True, blank=True, help_text="Timestamp of the last successful price update.")
 
     def __str__(self):
-        return f"{self.name} ({self.symbol})"
+        return f"{self.symbol} ({self.current_price:,.4f}$)"
 
     class Meta:
         verbose_name_plural = "Commodities"
+        ordering = ['symbol']
 
 
 class GMXPosition(models.Model):
@@ -47,6 +58,7 @@ class GMXPosition(models.Model):
 class NAVHistory(models.Model):
     """
     Stores periodic snapshots of the protocol's Net Asset Value (NAV).
+    (This model remains unchanged.)
     """
     SOURCE_CHOICES = [
         ('REALTIME_BACKEND', 'Real-time Backend Calculation'),
