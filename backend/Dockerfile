@@ -3,12 +3,14 @@
 # This line MUST be the very first line of the Dockerfile
 # syntax=docker/dockerfile:1
 
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
+
+RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
 
 # Set work directory
 WORKDIR /app

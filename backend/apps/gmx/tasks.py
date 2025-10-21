@@ -1,7 +1,7 @@
 from celery import shared_task
 import logging
 from django.utils import timezone
-from .services import PythPriceService
+from .services import PythPriceService, COMMODITY_PYTH_IDS
 from .models import Commodity
 
 log = logging.getLogger(__name__)
@@ -13,6 +13,9 @@ def update_pyth_prices_task():
     """
     log.info("Executing update_pyth_prices_task...")
     try:
+        for item in COMMODITY_PYTH_IDS:
+            Commodity.objects.get_or_create(symbol=item["Commodity"])
+
         service = PythPriceService()
         prices = service.get_all_commodity_prices()
 
@@ -42,27 +45,3 @@ def update_pyth_prices_task():
     except Exception as e:
         log.exception(f"An unexpected error occurred in the Pyth price update task: {e}")
         return f"Task failed with error: {e}"
-
-
-
-from .services import ChainlinkPriceService
-
-@shared_task(name="gmx.update_chainlink_prices")
-def update_chainlink_prices_task():
-    """
-    Celery task to update commodity prices from Chainlink.
-    """
-    log.info("Executing update_chainlink_prices_task...")
-    try:
-        service = ChainlinkPriceService(network="ETHEREUM")
-        price = service.get_price("ETH/USD")
-        if price:
-            Commodity.objects.filter(symbol="ETH/USD").update(
-                current_price=price,
-                last_price_update=timezone.now()
-            )
-            log.info(f"Updated Chainlink price for ETH/USD to ${price:,.4f}")
-        return "Chainlink update task finished."
-    except Exception as e:
-        log.exception(f"An error occurred in Chainlink task: {e}")
-        return f"Chainlink task failed: {e}"

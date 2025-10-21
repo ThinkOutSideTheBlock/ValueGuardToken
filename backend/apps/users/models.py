@@ -14,7 +14,6 @@ class UserManager(BaseUserManager):
                           is_superuser=is_superuser, **extra_fields)
         user.set_unusable_password()
         user.save(using=self._db)
-        send_welcome_email.delay(user.wallet_address)
         return user
 
     def create_user(self, wallet_address, **extra_fields):

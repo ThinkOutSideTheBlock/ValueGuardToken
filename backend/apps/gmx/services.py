@@ -11,9 +11,10 @@ COMMODITY_PYTH_IDS = [
     {"Commodity" :"Commodities.USOILSPOT" ,"PriceFeedID": "0x925ca92ff005ae943c158e3563f59698ce7e75c5a8c8dd43303a0a154887b3e6"},# Oil
 ]
 
+
 class PythPriceService:
-    """Fetches commodity prices from the Pyth Network API."""
-    BASE_URL = "https://hermes.pyth.network/api"
+    """Fetches commodity prices from the Pyth Network API V2."""
+    BASE_URL = "https://hermes.pyth.network"
 
     def _get_price_id_for_symbol(self, symbol: str) -> str | None:
         for item in COMMODITY_PYTH_IDS:
@@ -22,7 +23,7 @@ class PythPriceService:
         return None
 
     def get_price_by_symbol(self, symbol: str) -> Decimal | None:
-        """Fetches the price for a single commodity symbol."""
+        """Fetches the price for a single commodity symbol using the V2 endpoint."""
         price_id = self._get_price_id_for_symbol(symbol)
         if not price_id:
             log.warning(f"[PythService] Price ID for symbol '{symbol}' not found.")
@@ -36,7 +37,7 @@ class PythPriceService:
             
             parsed_data = data.get('parsed', [])
             if not parsed_data:
-                raise ValueError("Parsed data is missing in Pyth response.")
+                raise ValueError("Parsed data is missing in Pyth V2 response.")
 
             price_info = parsed_data[0]['price']
             price = Decimal(price_info['price']) * (Decimal(10) ** price_info['expo'])
@@ -46,7 +47,7 @@ class PythPriceService:
             return None
 
     def get_all_commodity_prices(self) -> dict[str, Decimal]:
-        """Fetches prices for all configured commodities in a single batch request."""
+        """Fetches prices for all configured commodities in a single batch request using the V2 endpoint."""
         price_ids = [item["PriceFeedID"] for item in COMMODITY_PYTH_IDS]
         if not price_ids:
             log.info("[PythService] No Pyth commodity IDs configured.")
@@ -62,14 +63,15 @@ class PythPriceService:
             
             parsed_data = data.get('parsed', [])
             if not parsed_data:
-                raise ValueError("Parsed data is missing in Pyth response.")
+                raise ValueError("Parsed data is missing in Pyth V2 response.")
 
-            # Create a mapping from price ID back to commodity symbol for easier processing
             id_to_symbol_map = {item["PriceFeedID"]: item["Commodity"] for item in COMMODITY_PYTH_IDS}
             
             results = {}
             for item in parsed_data:
-                symbol = id_to_symbol_map.get(item['id'])
+                response_id_with_prefix = f"0x{item['id']}"
+                symbol = id_to_symbol_map.get(response_id_with_prefix)
+                
                 if symbol:
                     price_info = item['price']
                     price = Decimal(price_info['price']) * (Decimal(10) ** price_info['expo'])
@@ -77,5 +79,5 @@ class PythPriceService:
             
             return results
         except (requests.RequestException, KeyError, ValueError) as e:
-            log.error(f"[PythService] Failed to get all commodity prices: {e}")
+            log.error(f"[PythService] Failed to get all commodity prices: {e}", exc_info=True)
             return {}

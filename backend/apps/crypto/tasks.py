@@ -2,7 +2,7 @@
 from celery import shared_task
 import logging
 from django.utils import timezone
-from .services import ChainlinkPriceService
+from .services import ChainlinkPriceService, CHAINLINK_ADDRESSES
 from .models import CryptoCurrency
 
 log = logging.getLogger(__name__)
@@ -14,6 +14,10 @@ def update_chainlink_prices_task(network="ETHEREUM"):
     """
     log.info(f"Executing update_chainlink_prices_task for network: {network}...")
     try:
+        network_pairs = CHAINLINK_ADDRESSES.get(network, {}).get("pairs", [])
+        for item in network_pairs:
+            CryptoCurrency.objects.get_or_create(symbol=item["symbol"], defaults={'name': item['pair']})
+            
         service = ChainlinkPriceService(network=network)
         prices = service.get_all_prices()
 

@@ -17,11 +17,13 @@ CHAINLINK_ADDRESSES = {
         "pairs" :[
             {            
                 "pair": "ETH/USD",
+                "symbol": "ETH/USD",
                 "address": "0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419"
             }
         ]        
     }
 }
+
 
 class ChainlinkPriceService:
     """Fetches crypto prices from Chainlink contracts directly on-chain."""
@@ -39,12 +41,13 @@ class ChainlinkPriceService:
         if not rpc_url:
             raise ImproperlyConfigured(f"Environment variable '{rpc_env_var}' is not set.")
 
-        self.w3 = Web3(Web3.HTTP_Provider(rpc_url))
+        self.w3 = Web3(Web3.HTTPProvider(rpc_url))
         if not self.w3.is_connected():
             raise ConnectionError(f"Failed to connect to the blockchain node at {rpc_env_var}.")
         
         self.network = network
         self.abi = network_config["ABI"]
+        
         self.price_feeds = {
             item['symbol']: item 
             for item in network_config.get("pairs", [])
@@ -61,7 +64,6 @@ class ChainlinkPriceService:
             contract = self.w3.eth.contract(address=feed_info['address'], abi=self.abi)
             decimals = contract.functions.decimals().call()
             latest_data = contract.functions.latestRoundData().call()
-            # latest_data is a tuple: (roundId, answer, startedAt, updatedAt, answeredInRound)
             price = Decimal(latest_data[1]) / (Decimal(10) ** decimals)
             return price
         except Exception as e:
