@@ -19,7 +19,7 @@ contract TreasuryController is ReentrancyGuard, Pausable, AccessControl {
     // ─── Events ─────────────────────────────────────────────
     // ─── Constructor ────────────────────────────────────────
     // ═══════════════════════════════════════════════════════════
-    // CORE MINT/REDEEM OPERATIONS
+    // CORE Fee/Gas options OPERATIONS
     // ═══════════════════════════════════════════════════════════
     // ═══════════════════════════════════════════════════════════
     // INTERNAL FUNCTIONS
