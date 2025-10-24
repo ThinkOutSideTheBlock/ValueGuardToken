@@ -1,0 +1,89 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VGT Protocol Dashboard</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f0f4f8;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h3 {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .value-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+        }
+
+        button {
+            cursor: pointer;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Value Guard Token</h1>
+            <div>
+                <a href="{% url 'admin_dashboard_page' %}" style="margin-right: 15px;">Admin Dashboard</a>
+                <button id="connect-wallet-btn">Connect Wallet</button>
+            </div>
+        </div>
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Ethers.js from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.2.0/ethers.umd.min.js"
+        type="application/javascript"></script>
+
+    <!-- Our JS modules -->
+    <script src="{% static 'frontend/wallet.js' %}"></script>
+    <script src="{% static 'frontend/api.js' %}"></script>
+    <script src="{% static 'frontend/app.js' %}"></script>
+
+    {% block page_scripts %}{% endblock %}
+</body>
+
+</html>

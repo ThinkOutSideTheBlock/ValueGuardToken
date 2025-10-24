@@ -1,0 +1,28 @@
+{% extends "frontend/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="card">
+        <h3>Basket Dashboard</h3>
+        <div class="value-item"><span>NAV:</span> <span id="basket-nav">$0.00</span></div>
+        <div class="value-item"><span>Total VGT Supply:</span> <span id="basket-total-supply">0</span></div>
+        <div class="value-item"><span>P&L (24h):</span> <span id="basket-pnl-day">0.00%</span></div>
+        <div class="value-item"><span>P&L (7d):</span> <span id="basket-pnl-week">0.00%</span></div>
+    </div>
+    <div class="card">
+        <h3>User Dashboard</h3>
+        <div class="value-item"><span>Your VGT Supply:</span> <span id="user-vgt-supply">0</span></div>
+        <div class="value-item"><span>Your Asset Value:</span> <span id="user-asset-value">$0.00</span></div>
+        <div class="value-item"><span>Your P&L:</span> <span id="user-pnl">0.00%</span></div>
+    </div>
+</div>
+<div style="text-align: center; margin-top: 20px;">
+    <button id="mint-btn">Mint</button>
+    <button id="redeem-btn">Redeem</button>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script src="{% static 'frontend/main.js' %}"></script>
+{% endblock %}

@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     'apps.core',
     'apps.users',
     'apps.protocol',
+    'apps.frontend',
 ]
 
 MIDDLEWARE = [
@@ -433,6 +434,11 @@ CELERY_BEAT_SCHEDULE = {
 EVENT_LISTENER_POLL_INTERVAL_SECONDS = int(os.getenv("EVENT_LISTENER_POLL_INTERVAL_SECONDS", 15))
 EVENT_LISTENER_ERROR_POLL_INTERVAL_SECONDS = int(os.getenv("EVENT_LISTENER_ERROR_POLL_INTERVAL_SECONDS", 60))
 
+
+# ==============================================================================
+# FRONTEND SETTINGS
+# ==============================================================================
+STATICFILES_DIRS = [BASE_DIR / "apps/frontend/static"]
 
 # ==============================================================================
 # STARTUP CONFIGURATION SUMMARY

@@ -12,8 +12,8 @@ def home(request):
 
 urlpatterns = [
 
-    # TODO: Temporary simple home page
-    path("", home),
+    path('', include('apps.frontend.urls')),
+
     path('admin/', admin.site.urls),
 
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),

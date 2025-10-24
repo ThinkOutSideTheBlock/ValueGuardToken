@@ -1,0 +1,33 @@
+{% extends "frontend/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="card">
+        <h3>On-chain Dashboard</h3>
+        <div class="value-item"><span>Total Users:</span> <span id="admin-total-users">0</span></div>
+        <div class="value-item"><span>Total NAV on GMX:</span> <span id="admin-total-nav">$0.00</span></div>
+        <div class="value-item"><span>Total P&L on GMX:</span> <span id="admin-total-pnl">0.00%</span></div>
+        <div class="value-item"><span>Total Reserve in Treasury:</span> <span id="admin-treasury-reserve">$0.00</span>
+        </div>
+    </div>
+    <div class="card">
+        <h3>Asset Dashboard</h3>
+        <div id="asset-dashboard-list">
+            <!-- Asset data will be injected here by JS -->
+        </div>
+    </div>
+</div>
+<div class="card" style="margin-top: 20px;">
+    <h3>Set Heartbeat</h3>
+    <form id="heartbeat-form">
+        <input type="number" id="heartbeat-seconds" placeholder="e.g., 3600" required min="300">
+        <button type="submit">Submit</button>
+    </form>
+    <div id="heartbeat-status" style="margin-top: 10px;"></div>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script src="{% static 'frontend/admin.js' %}"></script>
+{% endblock %}

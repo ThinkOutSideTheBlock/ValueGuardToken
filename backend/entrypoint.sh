@@ -13,7 +13,8 @@ echo "✅ PostgreSQL is ready!"
 
 # --- Apply Django migrations ---
 echo "📦 Running Django migrations..."
-python manage.py makemigrations --noinput
+python manage.py makemigrations users --noinput
+python manage.py makemigrations protocol --noinput
 python manage.py migrate --noinput
 
 # --- Collect static files ---
