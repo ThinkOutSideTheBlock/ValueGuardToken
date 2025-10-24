@@ -30,7 +30,7 @@ class SetHeartbeatView(views.APIView):
         serializer = HeartbeatSerializer(instance=state, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            log.info("Heartbeat updated", seconds=serializer.data['seconds'])
+            log.info("Heartbeat updated", seconds=serializer.data['heartbeatSeconds'])
             
             # Call the data fetcher AI agent API
             try:
@@ -55,12 +55,20 @@ class TriggerUpdateWeightsView(views.APIView):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+        onchain_service = OnChainService()
+
+        current_total_weights = onchain_service.get_total_basket_weights()
+        # We need to find the old weight of the index being updated to correctly calculate the new total
+        # This requires another on-chain call or a more complex logic.
+        # For now, we will add a placeholder for this critical validation.
+        # TODO: Implement a robust check for total weight validation before sending transaction.
+        log.warning("TODO: Total weight validation is not fully implemented.")
+
         validated_data = serializer.validated_data
         basket_index = validated_data['basketIndex']
         new_weight_bps = validated_data['newWeightBps']
         
         try:
-            onchain_service = OnChainService()
             onchain_service.update_basket_weight(basket_index, new_weight_bps)
             
             return Response({

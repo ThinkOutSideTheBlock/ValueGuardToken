@@ -27,10 +27,10 @@ class MintIntent(models.Model):
     intent_id = models.CharField(max_length=66, primary_key=True, help_text="The unique intent ID from the event.")
     user = models.CharField(max_length=42, db_index=True)
     deposit_asset = models.CharField(max_length=42)
-    deposit_amount = models.DecimalField(max_digits=36, decimal_places=18)
-    locked_nav = models.DecimalField(max_digits=36, decimal_places=18)
-    expected_shield = models.DecimalField(max_digits=36, decimal_places=18)
-    execution_fee = models.DecimalField(max_digits=36, decimal_places=18)
+    deposit_amount = models.DecimalField(max_digits=78, decimal_places=18)
+    locked_nav = models.DecimalField(max_digits=78, decimal_places=18)
+    expected_shield = models.DecimalField(max_digits=78, decimal_places=18)
+    execution_fee = models.DecimalField(max_digits=78, decimal_places=18)
     expires_at = models.BigIntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -51,10 +51,10 @@ class RedeemIntent(models.Model):
     intent_id = models.CharField(max_length=66, primary_key=True, help_text="The unique intent ID from the event.")
     user = models.CharField(max_length=42, db_index=True)
     output_asset = models.CharField(max_length=42)
-    shield_amount = models.DecimalField(max_digits=36, decimal_places=18)
-    locked_nav = models.DecimalField(max_digits=36, decimal_places=18)
-    expected_stablecoin = models.DecimalField(max_digits=36, decimal_places=18)
-    execution_fee = models.DecimalField(max_digits=36, decimal_places=18)
+    shield_amount = models.DecimalField(max_digits=78, decimal_places=18)
+    locked_nav = models.DecimalField(max_digits=78, decimal_places=18)
+    expected_stablecoin = models.DecimalField(max_digits=78, decimal_places=18)
+    execution_fee = models.DecimalField(max_digits=78, decimal_places=18)
     expires_at = models.BigIntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -123,3 +123,31 @@ class NAVUpdateLog(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+
+class DepositProcessedEvent(models.Model):
+    """Logs DepositProcessed events from the BasketManager."""
+    transaction_hash = models.CharField(max_length=66, primary_key=True)
+    deposit_id = models.PositiveBigIntegerField(db_index=True)
+    user = models.CharField(max_length=42, db_index=True)
+    amount = models.DecimalField(max_digits=78, decimal_places=18)
+    success = models.BooleanField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+class WithdrawalProcessedEvent(models.Model):
+    """Logs WithdrawalProcessed events from the BasketManager."""
+    transaction_hash = models.CharField(max_length=66, primary_key=True)
+    withdrawal_id = models.PositiveBigIntegerField(db_index=True)
+    user = models.CharField(max_length=42, db_index=True)
+    amount = models.DecimalField(max_digits=78, decimal_places=18)
+    success = models.BooleanField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+class RebalanceExecutedEvent(models.Model):
+    """Logs RebalanceExecuted events from the BasketManager."""
+    transaction_hash = models.CharField(max_length=66, primary_key=True)
+    from_token = models.CharField(max_length=42)
+    to_token = models.CharField(max_length=42)
+    amount = models.DecimalField(max_digits=78, decimal_places=18)
+    timestamp = models.PositiveBigIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)

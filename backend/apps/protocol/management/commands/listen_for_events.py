@@ -5,10 +5,15 @@ from decimal import Decimal
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
-from web3 import Web3
+from web3 import Web3, AsyncWeb3
 from web3.types import EventData, LogReceipt
-from ...models import MintIntent, RedeemIntent, IntentStatus, BasketAllocationUpdate, EventListenerState
+from ...models import (
+    MintIntent, RedeemIntent, IntentStatus, BasketAllocationUpdate,
+    EventListenerState, DepositProcessedEvent, WithdrawalProcessedEvent,
+    RebalanceExecutedEvent
+)
 from ...services import OnChainService
+from ...tasks import update_nav_task, trigger_rebalance_task
 
 log = structlog.get_logger(__name__)
 DECIMAL_SCALAR = Decimal(10) ** 18
@@ -64,28 +69,42 @@ class Command(BaseCommand):
 
     async def handle_deposit_processed(self, event: EventData):
         args = event.args
+        tx_hash = event.transactionHash.hex()
         log.info("Handler: DepositProcessed event received.", args=args)
-        if not args.success:
-            log.error("DepositProcessed event reported failure.", args=args)
-            return
-
-        scaled_amount = Decimal(args.amount) / DECIMAL_SCALAR
-        matching_intent = await MintIntent.objects.filter(
+        
+        # Save the event for audit trail
+        await DepositProcessedEvent.objects.acreate(
+            transaction_hash=tx_hash,
+            deposit_id=args.depositId,
             user=args.user,
-            deposit_amount=scaled_amount,
-            status=IntentStatus.PENDING
-        ).order_by('-created_at').afirst()
+            amount=Decimal(args.amount) / DECIMAL_SCALAR,
+            success=args.success
+        )
 
-        if not matching_intent:
-            log.warning("Received a DepositProcessed event but could not find a matching pending MintIntent.", args=args)
+        if not args.success:
+            log.warning("DepositProcessed event reported failure.", args=args)
             return
 
-        log.info("Found matching mint intent.", intent_id=matching_intent.intent_id)
+        # Find the original intentId by calling the contract
+        intent_id_hex = await self.onchain_service.get_intent_id_from_deposit(args.depositId)
+        if not intent_id_hex:
+            log.warning("Could not find associated intentId for deposit.", deposit_id=args.depositId)
+            return
+
+        matching_intent = await MintIntent.objects.filter(intent_id=intent_id_hex, status=IntentStatus.PENDING).afirst()
+        if not matching_intent:
+            log.warning("Found intentId but no matching PENDING intent in DB.", intent_id=intent_id_hex, deposit_id=args.depositId)
+            return
+
+        log.info("Found matching mint intent, proceeding to execute.", intent_id=matching_intent.intent_id)
         try:
-            await self.onchain_service.execute_mint_intent(matching_intent.intent_id, args.depositId)
+            await self.onchain_service.execute_mint_intent(matching_intent.intent_id)
             matching_intent.status = IntentStatus.PROCESSED
             await matching_intent.asave()
-            log.info("Successfully processed mint intent.", intent_id=matching_intent.intent_id)
+            log.info("Successfully executed mint intent.", intent_id=matching_intent.intent_id)
+            
+            # Trigger immediate NAV update
+            update_nav_task.delay(trigger_source=f"mint_completed_{matching_intent.intent_id[:10]}")
         except Exception as e:
             log.error("Failed to execute mint intent on-chain.", intent_id=matching_intent.intent_id, error=str(e), exc_info=True)
             matching_intent.status = IntentStatus.FAILED
@@ -93,28 +112,42 @@ class Command(BaseCommand):
 
     async def handle_withdrawal_processed(self, event: EventData):
         args = event.args
+        tx_hash = event.transactionHash.hex()
         log.info("Handler: WithdrawalProcessed event received.", args=args)
-        if not args.success:
-            log.error("WithdrawalProcessed event reported failure.", args=args)
-            return
 
-        scaled_amount = Decimal(args.amount) / DECIMAL_SCALAR
-        matching_intent = await RedeemIntent.objects.filter(
+        # Save the event for audit trail
+        await WithdrawalProcessedEvent.objects.acreate(
+            transaction_hash=tx_hash,
+            withdrawal_id=args.withdrawalId,
             user=args.user,
-            shield_amount=scaled_amount,
-            status=IntentStatus.PENDING
-        ).order_by('-created_at').afirst()
+            amount=Decimal(args.amount) / DECIMAL_SCALAR,
+            success=args.success
+        )
 
-        if not matching_intent:
-            log.warning("Received a WithdrawalProcessed event but could not find a matching pending RedeemIntent.", args=args)
+        if not args.success:
+            log.warning("WithdrawalProcessed event reported failure.", args=args)
             return
 
-        log.info("Found matching redeem intent.", intent_id=matching_intent.intent_id)
+        # Find the original intentId by calling the contract
+        intent_id_hex = await self.onchain_service.get_intent_id_from_withdrawal(args.withdrawalId)
+        if not intent_id_hex:
+            log.warning("Could not find associated intentId for withdrawal.", withdrawal_id=args.withdrawalId)
+            return
+
+        matching_intent = await RedeemIntent.objects.filter(intent_id=intent_id_hex, status=IntentStatus.PENDING).afirst()
+        if not matching_intent:
+            log.warning("Found intentId but no matching PENDING intent in DB.", intent_id=intent_id_hex, withdrawal_id=args.withdrawalId)
+            return
+            
+        log.info("Found matching redeem intent, proceeding to execute.", intent_id=matching_intent.intent_id)
         try:
             await self.onchain_service.execute_redeem_intent(matching_intent.intent_id)
             matching_intent.status = IntentStatus.PROCESSED
             await matching_intent.asave()
-            log.info("Successfully processed redeem intent.", intent_id=matching_intent.intent_id)
+            log.info("Successfully executed redeem intent.", intent_id=matching_intent.intent_id)
+            
+            # Trigger immediate NAV update
+            update_nav_task.delay(trigger_source=f"redeem_completed_{matching_intent.intent_id[:10]}")
         except Exception as e:
             log.error("Failed to execute redeem intent on-chain.", intent_id=matching_intent.intent_id, error=str(e), exc_info=True)
             matching_intent.status = IntentStatus.FAILED
@@ -124,6 +157,7 @@ class Command(BaseCommand):
         args = event.args
         tx_hash = event.transactionHash.hex()
         log.info("Handler: BasketAllocationUpdated event received.", args=args, tx_hash=tx_hash)
+
         await BasketAllocationUpdate.objects.aupdate_or_create(
             transaction_hash=tx_hash,
             defaults={
@@ -132,11 +166,28 @@ class Command(BaseCommand):
                 'new_weight_bps': args.newWeightBps,
             }
         )
-        log.info("Basket allocation update saved to database.", tx_hash=tx_hash)
-        try:
-            await self.onchain_service.rebalance_positions()
-        except Exception as e:
-            log.error("Failed to trigger rebalancePositions.", tx_hash=tx_hash, error=str(e), exc_info=True)
+        log.info("Basket allocation update saved to database. Triggering rebalance task with cooldown.", tx_hash=tx_hash)
+        
+        # Trigger the delayed rebalance task
+        trigger_rebalance_task.apply_async()
+
+    async def handle_rebalance_executed(self, event: EventData):
+        args = event.args
+        tx_hash = event.transactionHash.hex()
+        log.info("Handler: RebalanceExecuted event received.", args=args, tx_hash=tx_hash)
+
+        await RebalanceExecutedEvent.objects.acreate(
+            transaction_hash=tx_hash,
+            from_token=args.fromToken,
+            to_token=args.toToken,
+            amount=Decimal(args.amount) / DECIMAL_SCALAR,
+            timestamp=args.timestamp
+        )
+        log.info("Rebalance execution saved to database. Triggering immediate NAV update.", tx_hash=tx_hash)
+
+        # Trigger immediate NAV update as positions have changed
+        update_nav_task.delay(trigger_source=f"rebalance_executed_{tx_hash[:10]}")
+
 
     # --- Core Processing Logic ---
     # ... (process_log and process_block methods remain the same as the previous async version)
@@ -177,50 +228,72 @@ class Command(BaseCommand):
 
     # --- Main Asynchronous Loop ---
     async def main_loop(self):
-        w3 = Web3(Web3.AsyncHTTPProvider(settings.NODE_RPC_URL))
-        w3_ws = Web3(Web3.AsyncWebsocketProvider(settings.NODE_WS_URL))
+        w3_http = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(settings.NODE_RPC_URL))
 
-        self.onchain_service = OnChainService()
+        self.onchain_service = OnChainService(w3=w3_http)
         contracts = {
-            self.onchain_service.vault_contract: [
+            self.onchain_service.vault_manager_contract: [
                 ('MintIntentCreated', self.handle_mint_intent_created),
                 ('RedeemIntentCreated', self.handle_redeem_intent_created)
             ],
             self.onchain_service.basket_manager_contract: [
                 ('DepositProcessed', self.handle_deposit_processed),
                 ('WithdrawalProcessed', self.handle_withdrawal_processed),
-                ('BasketAllocationUpdated', self.handle_basket_allocation_updated)
+                ('BasketAllocationUpdated', self.handle_basket_allocation_updated),
+                ('RebalanceExecuted', self.handle_rebalance_executed)
             ]
         }
+        self.contract_addresses.clear()
+        self.event_handlers.clear()
         for contract, events in contracts.items():
             self.contract_addresses.add(contract.address)
             for event_name, handler in events:
                 event_abi = next((abi for abi in contract.abi if abi.get('name') == event_name and abi.get('type') == 'event'), None)
                 if event_abi:
-                    topic_hash = w3.keccak(text=f"{event_name}({','.join([w3.get_abi_input_types(abi_input) for abi_input in event_abi['inputs']])})").hex()
+                    input_types = [inp['type'] for inp in event_abi['inputs']]
+                    topic_hash = w3_http.keccak(text=f"{event_name}({','.join(input_types)})").hex()
                     self.event_handlers[topic_hash] = {
                         'name': event_name,
                         'handler': handler,
                         'abi': contract.abi
                     }
 
-        state, _ = await EventListenerState.objects.aget_or_create(pk=1, defaults={'last_processed_block': await w3.eth.block_number})
+        latest_block = await w3_http.eth.block_number
+        state, _ = await EventListenerState.objects.aget_or_create(pk=1, defaults={'last_processed_block': latest_block})
         start_block = state.last_processed_block + 1
-        latest_block = await w3.eth.block_number
         
         if start_block <= latest_block:
             log.info("Catching up on missed blocks", from_block=start_block, to_block=latest_block)
-            for block_num in range(start_block, latest_block + 1):
-                await self.process_block(w3, block_num)
+            tasks = [self.process_block(w3_http, block_num) for block_num in range(start_block, latest_block + 1)]
+            await asyncio.gather(*tasks)
 
-        log.info("Finished catch-up. Subscribing to new blocks...")
+        log.info("Finished catch-up. Now connecting to WebSocket for new blocks...")
         
-        subscription_id = await w3_ws.eth.subscribe('newHeads')
-        
-        async for block_header in w3_ws.eth.socket.listen_to_subscription(subscription_id):
-            if block_header:
-                block_number = block_header['number']
-                await self.process_block(w3, block_number)
+        async with AsyncWeb3(AsyncWeb3.WebSocketProvider(settings.NODE_WS_URL)) as w3_ws:
+            log.info("WebSocket connection established. Subscribing to new blocks...")
+            
+            # Subscribe to new block headers
+            await w3_ws.eth.subscribe('newHeads')
+
+            while True:
+                try:
+                    # Wait for a new message from the WebSocket
+                    message = await asyncio.wait_for(w3_ws.socket.recv(), timeout=60*5) # 5 min timeout
+                    subscription, block_header = w3_ws.eth.get_subscription_message(message)
+                    
+                    if block_header and 'number' in block_header:
+                        block_number = block_header['number']
+                        # Process the block using the robust HTTP provider
+                        await self.process_block(w3_http, block_number)
+
+                except asyncio.TimeoutError:
+                    log.warning("No new block in 5 minutes. Checking WebSocket connection.")
+                    # The loop will continue, and if the connection is dead,
+                    # the outer `while True` in `handle()` will trigger a reconnect.
+                    pass
+                except Exception as e:
+                    log.error("Error while listening to WebSocket subscription. Will attempt to reconnect.", error=str(e))
+                    break # Exit the inner loop to trigger a full reconnect
 
     def handle(self, *args, **options):
         while True:

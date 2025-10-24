@@ -7,10 +7,10 @@ class GMXPositionSerializer(serializers.ModelSerializer):
         fields = ['position_id', 'is_closed', 'created_at', 'updated_at']
 
 class HeartbeatSerializer(serializers.Serializer):
-    seconds = serializers.IntegerField(min_value=1)
+    heartbeatSeconds = serializers.IntegerField(min_value=300)
 
     def update(self, instance, validated_data):
-        instance.heartbeat_seconds = validated_data.get('seconds', instance.heartbeat_seconds)
+        instance.heartbeat_seconds = validated_data.get('heartbeatSeconds', instance.heartbeat_seconds)
         instance.save()
         return instance
     
