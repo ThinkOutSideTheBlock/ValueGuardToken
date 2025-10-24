@@ -33,8 +33,7 @@ pip install -r requirements.txt
 
 ```bash
 python manage.py makemigrations users
-python manage.py makemigrations gmx
-python manage.py makemigrations crypto
+python manage.py makemigrations protocol
 python manage.py migrate
 ```
 
