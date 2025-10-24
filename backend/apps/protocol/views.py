@@ -8,9 +8,11 @@ from rest_framework.permissions import IsAdminUser
 from .models import GMXPosition, ProtocolState
 from .serializers import GMXPositionSerializer, HeartbeatSerializer, UpdateBasketWeightSerializer
 from .services import OnChainService 
+from drf_spectacular.utils import extend_schema 
 
 log = structlog.get_logger(__name__)
 
+@extend_schema(tags=['Protocol'])
 class GMXPositionViewSet(viewsets.ModelViewSet):
     """
     API endpoint for admins to manage GMX positions.
@@ -19,6 +21,7 @@ class GMXPositionViewSet(viewsets.ModelViewSet):
     serializer_class = GMXPositionSerializer
     permission_classes = [IsAdminUser]
 
+@extend_schema(tags=['Protocol'])
 class SetHeartbeatView(views.APIView):
     """
     API endpoint for admins to set the heartbeat interval.
@@ -43,6 +46,7 @@ class SetHeartbeatView(views.APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@extend_schema(tags=['Protocol'])
 class TriggerUpdateWeightsView(views.APIView):
     """
     API endpoint for admins to trigger a rebalancing weight update.
