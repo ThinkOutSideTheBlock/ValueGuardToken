@@ -59,3 +59,9 @@ ENV_FILE=.env docker-compose -f docker-compose.production.yml --env-file .env -p
 -   The Django Admin panel will be at `http://localhost:8000/admin/`.
 -   The API documentation is at `http://localhost:8000/api/docs/` & `http://localhost:8000/api/redoc/`.
 
+
+**4. Stop and Remove All Containers**
+
+```bash
+ENV_FILE=.env docker-compose -f docker-compose.production.yml --env-file .env -p backend-prod down -v
+```

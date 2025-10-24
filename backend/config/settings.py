@@ -14,7 +14,6 @@ from celery.schedules import crontab
 BASE_DIR = Path(__file__).resolve().parent.parent
 IS_MAIN_PROCESS = os.environ.get('RUN_MAIN') != 'true'
 
-
 # ==============================================================================
 # APPLICATION MODE CONFIGURATION
 # ==============================================================================
@@ -71,8 +70,7 @@ INSTALLED_APPS = [
     # Local apps
     'apps.core',
     'apps.users',
-    'apps.gmx',
-    'apps.crypto',
+    'apps.protocol',
 ]
 
 MIDDLEWARE = [
@@ -372,7 +370,6 @@ SIMPLE_JWT = {
 # CACHING CONFIGURATION
 # ==============================================================================
 CACHE_URL = os.getenv('CACHE_URL')
-HOT_WALLET_PRIVATE_KEY = os.getenv("HOT_WALLET_PRIVATE_KEY")
 
 if CACHE_URL:
     CACHES = {
@@ -400,17 +397,41 @@ else:
 # BLOCKCHAIN SETTINGS
 # ==============================================================================
 
+NODE_RPC_URL=os.getenv("NODE_RPC_URL")
+NODE_WS_URL = os.getenv("NODE_WS_URL")
+
+# --- Contract Addresses ---
+VAULT_MANAGER_CONTRACT_ADDRESS = os.getenv("VAULT_MANAGER_CONTRACT_ADDRESS")
+BASKET_MANAGER_CONTRACT_ADDRESS = os.getenv("BASKET_MANAGER_CONTRACT_ADDRESS")
+BASKET_ORACLE_CONTRACT_ADDRESS = os.getenv("BASKET_ORACLE_CONTRACT_ADDRESS")
+
+GMX_READER_CONTRACT_ADDRESS = os.getenv("GMX_READER_CONTRACT_ADDRESS")
+GMX_DATA_STORE_ADDRESS = os.getenv("GMX_DATA_STORE_ADDRESS")
+USDC_ADDRESS = os.getenv("USDC_ADDRESS")
+
+# --- Task Intervals & Values ---
+REBALANCE_COOLDOWN_SECONDS = int(os.getenv("REBALANCE_COOLDOWN_SECONDS", 300))
+REBALANCE_EXECUTION_FEE_ETH = os.getenv("REBALANCE_EXECUTION_FEE_ETH", "0.1") 
+
+# --- External Services ---
+DATA_FETCHER_AI_AGENT_API_URL = os.getenv("DATA_FETCHER_AI_AGENT_API_URL")
+
+NAV_UPDATE_INTERVAL_SECONDS = int(os.getenv("NAV_UPDATE_INTERVAL_SECONDS", 300))
+
+HOT_WALLET_PRIVATE_KEY = os.getenv("HOT_WALLET_PRIVATE_KEY")
+
 CELERY_BEAT_SCHEDULE = {
-    'update-pyth-prices-every-minute': {
-        'task': 'gmx.update_pyth_prices',
-        'schedule': 60.0,
-    },
-    'update-chainlink-eth-prices-every-5-minutes': {
-        'task': 'crypto.update_chainlink_prices', 
-        'schedule': crontab(minute='*/5'),  
-        'kwargs': {'network': 'ETHEREUM'}
+        'periodic-nav-update': {
+        'task': 'protocol.update_nav',
+        'schedule': NAV_UPDATE_INTERVAL_SECONDS,
     },
 }
+
+# ==============================================================================
+# EVENT LISTENER SETTINGS
+# ==============================================================================
+EVENT_LISTENER_POLL_INTERVAL_SECONDS = int(os.getenv("EVENT_LISTENER_POLL_INTERVAL_SECONDS", 15))
+EVENT_LISTENER_ERROR_POLL_INTERVAL_SECONDS = int(os.getenv("EVENT_LISTENER_ERROR_POLL_INTERVAL_SECONDS", 60))
 
 
 # ==============================================================================
