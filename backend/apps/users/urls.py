@@ -8,5 +8,4 @@ urlpatterns = [
     path("me/", ProfileView.as_view(), name="profile"),
     path("admin-only/", AdminOnlyView.as_view(), name="admin-only"),
     path('auth/token/refresh/', CustomTokenRefreshView.as_view(), name='token_refresh'),
-
 ]
