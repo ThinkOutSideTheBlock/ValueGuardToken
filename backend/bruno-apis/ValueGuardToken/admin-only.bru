@@ -1,0 +1,20 @@
+meta {
+  name: admin-only
+  type: http
+  seq: 3
+}
+
+get {
+  url: http://127.0.0.1:8000/admin-only/
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzYwNzA5MTc0LCJpYXQiOjE3NjA3MDczNzQsImp0aSI6IjAyY2M0MjNjMjc1MzRmMGY5N2RlOWJmMTA0MzEzYTkyIiwidXNlcl9pZCI6IjM2ZmY0YTI4LTdiMDQtNDNkNi05M2VjLTRjYzk4NDI0YzFlYiJ9.02ZgQycTgOrQHL0be3-go15xFxmTqajV9TiPfpBAadg
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,0 +1,20 @@
+meta {
+  name: me
+  type: http
+  seq: 1
+}
+
+get {
+  url: http://127.0.0.1:8000/me/
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzYwNzA4MTU3LCJpYXQiOjE3NjA3MDYzNjMsImp0aSI6IjhlODJlODBkMThjOTQ4OGViZmU2ZDU4OWY1NGNhZTE5IiwidXNlcl9pZCI6IjcyNTc0NDg2LTBhMDktNDhmNi1iZTE4LWQwMTc1NDNiNWE0MSJ9.XO_GaCJ6Guc3MVyrgSKY90kyukP9THemtjxR32aRqho
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

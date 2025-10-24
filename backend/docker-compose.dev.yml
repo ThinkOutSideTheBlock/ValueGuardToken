@@ -1,0 +1,64 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    env_file:
+      - ${ENV_FILE}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  web:
+    build:
+      context: .
+      secrets:
+        - env_file
+    # The default CMD from the Dockerfile will be used, which is Gunicorn.
+    # command: gunicorn config.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - ${ENV_FILE}:/app/.env:ro 
+      - /var/log/backend-web-mobile-app/dev/django_app:/app/logs
+    ports:
+      - "${EX_WEB_PORT}:8000"
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  celery:
+    build:
+        context: .
+        secrets:
+          - env_file
+    command: celery -A config worker -l info
+    volumes:
+      - ${ENV_FILE}:/app/.env:ro
+      - /var/log/backend-web-mobile-app/dev/celery_worker:/app/logs
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+    networks:
+      - app-network
+
+secrets:
+  env_file:
+    file: ${ENV_FILE}
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
