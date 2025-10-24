@@ -229,8 +229,8 @@ class Command(BaseCommand):
     # --- Main Asynchronous Loop ---
     async def main_loop(self):
         w3_http = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(settings.NODE_RPC_URL))
-
         self.onchain_service = OnChainService(w3=w3_http)
+        
         contracts = {
             self.onchain_service.vault_manager_contract: [
                 ('MintIntentCreated', self.handle_mint_intent_created),

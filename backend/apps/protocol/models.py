@@ -114,7 +114,7 @@ class NAVUpdateLog(models.Model):
     Stores a historical log of each NAV calculation performed by the backend.
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    total_position_size = models.DecimalField(max_digits=36, decimal_places=18)
+    total_position_size = models.DecimalField(max_digits=78, decimal_places=18)
     onchain_tx_hash = models.CharField(max_length=66, null=True, blank=True, help_text="Tx hash of the on-chain NAV update.")
     created_at = models.DateTimeField(auto_now_add=True)
 

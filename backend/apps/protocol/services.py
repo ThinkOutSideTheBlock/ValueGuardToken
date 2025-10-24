@@ -52,7 +52,7 @@ class OnChainService:
         tx_with_nonce['gas'] = self.w3.eth.estimate_gas(tx_with_nonce)
         
         signed_tx = self.account.sign_transaction(tx_with_nonce)
-        tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+        tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
         
         log.info("Transaction sent, waiting for receipt...", tx_hash=tx_hash.hex())
         receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)

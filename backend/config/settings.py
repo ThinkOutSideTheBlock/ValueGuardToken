@@ -70,8 +70,6 @@ INSTALLED_APPS = [
     # Local apps
     'apps.core',
     'apps.users',
-    'apps.gmx',
-    'apps.crypto',
     'apps.protocol',
 ]
 
@@ -423,15 +421,6 @@ NAV_UPDATE_INTERVAL_SECONDS = int(os.getenv("NAV_UPDATE_INTERVAL_SECONDS", 300))
 HOT_WALLET_PRIVATE_KEY = os.getenv("HOT_WALLET_PRIVATE_KEY")
 
 CELERY_BEAT_SCHEDULE = {
-    'update-pyth-prices-every-minute': {
-        'task': 'gmx.update_pyth_prices',
-        'schedule': 60.0,
-    },
-    'update-chainlink-eth-prices-every-5-minutes': {
-        'task': 'crypto.update_chainlink_prices', 
-        'schedule': crontab(minute='*/5'),  
-        'kwargs': {'network': 'ETHEREUM'}
-    },
         'periodic-nav-update': {
         'task': 'protocol.update_nav',
         'schedule': NAV_UPDATE_INTERVAL_SECONDS,
