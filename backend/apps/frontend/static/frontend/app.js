@@ -1,39 +1,47 @@
-// This file contains JavaScript code shared across all pages.
-
 document.addEventListener('DOMContentLoaded', () => {
     const connectBtn = document.getElementById('connect-wallet-btn');
 
-    // This function updates the button text based on wallet connection status
-    const updateConnectButtonUI = () => {
-        const address = wallet.getAddress();
-        const token = api.getAccessToken();
-        if (address && token) {
-            connectBtn.textContent = `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+    const updateConnectButtonUI = async () => {
+        const refreshToken = api.getRefreshToken();
+
+        // The source of truth for being "logged in" is the presence of a refresh token.
+        if (refreshToken) {
+            // If we are logged in, try to connect to the wallet to get the address.
+            // The user might have already granted permission.
+            try {
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length > 0) {
+                    const address = accounts[0];
+                    connectBtn.textContent = `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+                } else {
+                    // Logged in, but wallet is locked or disconnected.
+                    connectBtn.textContent = 'Connect Wallet';
+                    api.clearTokens(); // Clear tokens if wallet is disconnected/locked
+                }
+            } catch (e) {
+                console.error("Could not get wallet accounts.", e);
+                connectBtn.textContent = 'Connect Wallet';
+            }
         } else {
+            // Not logged in.
             connectBtn.textContent = 'Connect Wallet';
-            api.clearTokens(); // Ensure storage is clean if disconnected
         }
     };
 
-    // Attach the login logic to the button click
     connectBtn.addEventListener('click', async () => {
-        const address = wallet.getAddress();
-        const token = api.getAccessToken();
-
-        // If already connected, do nothing (or implement a disconnect logic)
-        if (address && token) {
-            console.log("Wallet already connected.");
+        const refreshToken = api.getRefreshToken();
+        if (refreshToken) {
+            console.log("Already logged in.");
             return;
         }
 
         const success = await api.login();
         if (success) {
-            // A simple and effective way to ensure the page state is correct after login
-            // is to just reload the page.
-            window.location.reload();
+            await updateConnectButtonUI(); // Update button text
+            document.dispatchEvent(new CustomEvent('walletConnected')); // Notify other scripts
         }
     });
 
-    // Update the button text as soon as the page loads
+    // Initial UI update on page load
     updateConnectButtonUI();
 });

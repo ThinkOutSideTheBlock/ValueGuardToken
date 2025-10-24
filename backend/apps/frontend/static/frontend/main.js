@@ -1,9 +1,11 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     const updateDashboardData = async () => {
-        // This function will only run if the user is already connected.
-        if (!wallet.getAddress() || !api.getAccessToken()) {
-            console.log("User not connected, skipping data fetch.");
+        const address = await wallet.getAddress(); // Use await
+        const token = api.getAccessToken();
+
+        if (!address || !token) { // Check both
+            console.log("User not connected, skipping data fetch on main page.");
             return;
         }
 
@@ -25,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const nav = ethers.utils.parseEther("1234567.89"); // Mock NAV
             const [totalSupply, userSupply] = await Promise.all([
                 contract.totalSupply(),
-                contract.balanceOf(wallet.getAddress())
+                contract.balanceOf(address) // Pass the address here
             ]);
 
             // Update basket dashboard
@@ -43,6 +45,11 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Failed to fetch dashboard data:", error);
         }
     };
+
+    document.addEventListener('walletConnected', () => {
+        console.log("Caught 'walletConnected' event. Fetching initial data.");
+        updateDashboardData();
+    });
 
     // Periodically update data every 10 seconds if user is connected
     setInterval(updateDashboardData, 10000);

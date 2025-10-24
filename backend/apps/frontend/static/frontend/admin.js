@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const heartbeatForm = document.getElementById('heartbeat-form');
     const heartbeatStatus = document.getElementById('heartbeat-status');
 
@@ -47,11 +47,12 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     };
 
-    if (!api.getAccessToken()) {
-        alert("Please connect wallet on the main page first.");
+    const token = api.getAccessToken();
+    if (!token) {
+        alert("Authentication required. Please connect your wallet on the main page.");
         window.location.href = "/";
     } else {
-        updateAdminDashboardData();
+        await updateAdminDashboardData(); // Use await
         setInterval(updateAdminDashboardData, 10000);
     }
 });

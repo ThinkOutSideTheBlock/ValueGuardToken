@@ -27,7 +27,7 @@ const api = {
             const { message } = await nonceResponse.json();
 
             // 2. Sign message
-            const signature = await wallet.signMessage(message);
+            const signature = await wallet.signMessage(message, address);
 
             // 3. Verify signature and get tokens
             const verifyResponse = await fetch(`${this.BASE_URL}/users/auth/verify/`, {
