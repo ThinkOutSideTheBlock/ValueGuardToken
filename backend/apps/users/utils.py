@@ -6,7 +6,7 @@ from eth_account import Account
 from django.utils import timezone
 from datetime import timedelta
 
-NONCE_TTL_SECONDS = int(os.getenv("ETH_NONCE_TTL", 300))  # 5 minutes
+NONCE_TTL_SECONDS = int(os.getenv("NONCE_TTL_SECONDS", 300))  # 5 minutes
 
 def generate_nonce():
     return secrets.token_urlsafe(16)

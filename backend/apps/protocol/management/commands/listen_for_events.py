@@ -12,7 +12,7 @@ from ...models import (
     EventListenerState, DepositProcessedEvent, WithdrawalProcessedEvent,
     RebalanceExecutedEvent
 )
-from ...services import OnChainService
+from ...services import AsyncOnChainService, OnChainService
 from ...tasks import update_nav_task, trigger_rebalance_task
 
 log = structlog.get_logger(__name__)
@@ -229,7 +229,7 @@ class Command(BaseCommand):
     # --- Main Asynchronous Loop ---
     async def main_loop(self):
         w3_http = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(settings.NODE_RPC_URL))
-        self.onchain_service = OnChainService(w3=w3_http)
+        self.onchain_service = AsyncOnChainService(w3=w3_http)
         
         contracts = {
             self.onchain_service.vault_manager_contract: [
@@ -259,46 +259,36 @@ class Command(BaseCommand):
                     }
 
         latest_block = await w3_http.eth.block_number
-        state, _ = await EventListenerState.objects.aget_or_create(pk=1, defaults={'last_processed_block': latest_block})
-        start_block = state.last_processed_block + 1
-        
-        if start_block <= latest_block:
-            log.info("Catching up on missed blocks", from_block=start_block, to_block=latest_block)
-            tasks = [self.process_block(w3_http, block_num) for block_num in range(start_block, latest_block + 1)]
-            await asyncio.gather(*tasks)
+        state, _ = await EventListenerState.objects.aget_or_create(pk=1, defaults={'last_processed_block': await w3_http.eth.block_number})
+        last_processed_block = state.last_processed_block
 
-        log.info("Finished catch-up. Now connecting to WebSocket for new blocks...")
-        
-        async with AsyncWeb3(AsyncWeb3.WebSocketProvider(settings.NODE_WS_URL)) as w3_ws:
-            log.info("WebSocket connection established. Subscribing to new blocks...")
-            
-            # Subscribe to new block headers
-            await w3_ws.eth.subscribe('newHeads')
-
-            while True:
-                try:
-                    # Wait for a new message from the WebSocket
-                    message = await asyncio.wait_for(w3_ws.socket.recv(), timeout=60*5) # 5 min timeout
-                    subscription, block_header = w3_ws.eth.get_subscription_message(message)
+        while True:
+            try:
+                latest_block = await w3_http.eth.block_number
+                
+                # If new blocks have been mined since the last check
+                if latest_block > last_processed_block:
+                    log.info("New blocks detected.", from_block=last_processed_block + 1, to_block=latest_block)
                     
-                    if block_header and 'number' in block_header:
-                        block_number = block_header['number']
-                        # Process the block using the robust HTTP provider
-                        await self.process_block(w3_http, block_number)
+                    # Process all blocks from the last processed one up to the latest
+                    for block_num in range(last_processed_block + 1, latest_block + 1):
+                        await self.process_block(w3_http, block_num)
+                    
+                    last_processed_block = latest_block
 
-                except asyncio.TimeoutError:
-                    log.warning("No new block in 5 minutes. Checking WebSocket connection.")
-                    # The loop will continue, and if the connection is dead,
-                    # the outer `while True` in `handle()` will trigger a reconnect.
-                    pass
-                except Exception as e:
-                    log.error("Error while listening to WebSocket subscription. Will attempt to reconnect.", error=str(e))
-                    break # Exit the inner loop to trigger a full reconnect
+                # Wait for a short interval before checking again
+                await asyncio.sleep(settings.EVENT_LISTENER_POLL_INTERVAL_SECONDS)
+
+            except Exception as e:
+                log.error("Error in polling loop. Retrying...", error=str(e), exc_info=True)
+                await asyncio.sleep(settings.EVENT_LISTENER_ERROR_POLL_INTERVAL_SECONDS)
 
     def handle(self, *args, **options):
+        # The outer while True loop for reconnection is no longer strictly necessary
+        # as the inner loop handles errors, but we keep it for robustness.
         while True:
             try:
                 asyncio.run(self.main_loop())
             except Exception as e:
-                log.error("Main listener loop crashed. Reconnecting...", error=str(e), exc_info=True)
+                log.error("Main listener loop crashed fatally. Reconnecting...", error=str(e), exc_info=True)
                 time.sleep(settings.EVENT_LISTENER_ERROR_POLL_INTERVAL_SECONDS)
