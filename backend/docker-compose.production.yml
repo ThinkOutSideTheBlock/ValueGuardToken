@@ -34,6 +34,7 @@ services:
     volumes:
       - ${ENV_FILE}:/app/.env:ro 
       - /var/log/backend-web-mobile-app/prod/django_app:/app/logs
+      - ./abi:/app/abi:ro
     ports:
       - "${EX_WEB_PORT}:8000"
     depends_on:
@@ -55,6 +56,7 @@ services:
     volumes:
       - ${ENV_FILE}:/app/.env:ro
       - /var/log/backend-web-mobile-app/prod/celery_worker:/app/logs
+      - ./abi:/app/abi:ro
     depends_on:
       web:
         condition: service_started
@@ -78,6 +80,30 @@ services:
     volumes:
       - ${ENV_FILE}:/app/.env:ro
       - /var/log/backend-web-mobile-app/prod/celery_worker:/app/logs
+      - ./abi:/app/abi:ro
+    depends_on:
+      web:
+        condition: service_started
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  event-listener:
+    build:
+      context: .
+      secrets:
+        - env_file
+    env_file:
+      - ${ENV_FILE}
+    command: python manage.py listen_for_events
+    volumes:
+      - ${ENV_FILE}:/app/.env:ro
+      - /var/log/backend-web-mobile-app/prod/event_listener:/app/logs
+      - ./abi:/app/abi:ro
     depends_on:
       web:
         condition: service_started

@@ -23,6 +23,7 @@ urlpatterns = [
     path('api/<str:version>/', include([
         path('users/', include('apps.users.urls')),
         path('core/', include('apps.core.urls')),
+        path('protocol/', include('apps.protocol.urls')),
     ])),
 
 ]
