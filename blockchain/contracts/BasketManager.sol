@@ -9,7 +9,7 @@ pragma solidity ^0.8.28;
 //need to be complete
 // ═══════════════════════════════════════════════════════════
 // ═══════════════════════════════════════════════════════════
-// PYUSD INTEGRATION CONTRACT
+// Basket Manager CONTRACT
 // ═══════════════════════════════════════════════════════════
 contract BasketManager is ReentrancyGuard, Pausable, AccessControl {
     //math/safemath to be imported (might be)
