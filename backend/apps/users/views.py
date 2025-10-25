@@ -1,6 +1,8 @@
 from rest_framework import status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
+
+from apps.core.permissions import IsAdminRole
 from .serializers import (
     RequestNonceSerializer, 
     VerifySignatureSerializer, 
@@ -143,7 +145,7 @@ class ProfileView(APIView):
     }
 )
 class AdminOnlyView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated, IsAdminRole]
 
     def get(self, request, *args, **kwargs):
         return Response({"detail": "This is accessible only to admin users."}, status=status.HTTP_200_OK)

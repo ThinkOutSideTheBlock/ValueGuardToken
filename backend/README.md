@@ -54,7 +54,8 @@ python manage.py runserver
 ENV_FILE=.env docker-compose -f docker-compose.production.yml --env-file .env -p backend-prod up -d --build
 ```
 
--   Your API will be available at `http://localhost:8000`.
+-   Your home page at `http://localhost:8000`.
+-   Admin dashboard will be available at `http://localhost:8000/admin-dashboard`.
 -   The Django Admin panel will be at `http://localhost:8000/admin/`.
 -   The API documentation is at `http://localhost:8000/api/docs/` & `http://localhost:8000/api/redoc/`.
 

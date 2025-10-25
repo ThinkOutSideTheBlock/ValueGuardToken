@@ -13,7 +13,8 @@ echo "✅ PostgreSQL is ready!"
 
 # --- Apply Django migrations ---
 echo "📦 Running Django migrations..."
-python manage.py makemigrations --noinput
+python manage.py makemigrations users --noinput
+python manage.py makemigrations protocol --noinput
 python manage.py migrate --noinput
 
 # --- Collect static files ---
@@ -30,6 +31,7 @@ wallet = "${DJANGO_SUPERUSER_WALLET}".lower()
 if not User.objects.filter(wallet_address=wallet).exists():
     User.objects.create_superuser(
         wallet_address=wallet,
+        role="admin",
         password="${DJANGO_SUPERUSER_PASSWORD}"
     )
     print("✅ Superuser created successfully.")
