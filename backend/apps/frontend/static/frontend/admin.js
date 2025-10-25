@@ -33,18 +33,73 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    let pieChart = null; // Variable to hold the chart instance
+
+    const createOrUpdatePieChart = (labels, data) => {
+        const ctx = document.getElementById('asset-pie-chart').getContext('2d');
+
+        if (pieChart) {
+            pieChart.data.labels = labels;
+            pieChart.data.datasets[0].data = data;
+            pieChart.update();
+            return;
+        }
+
+        pieChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels, // e.g., ['Gold', 'Oil', 'USDC']
+                datasets: [{
+                    label: 'Asset Allocation',
+                    data: data, // e.g., [50, 30, 20]
+                    backgroundColor: [
+                        'rgba(255, 206, 86, 0.7)',  // Gold
+                        'rgba(75, 192, 192, 0.7)',   // Teal
+                        'rgba(54, 162, 235, 0.7)',  // Blue
+                        'rgba(153, 102, 255, 0.7)', // Purple
+                    ],
+                    borderColor: [
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(153, 102, 255, 1)',
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: 'white' // Legend text color
+                        }
+                    },
+                }
+            }
+        });
+    };
+
     const updateAdminDashboardData = async () => {
         console.log("Updating admin dashboard data...");
-        // TODO: Implement data fetching for admin dashboard from smart contracts
-        document.getElementById('admin-total-users').textContent = "123"; // Mock
-        document.getElementById('admin-total-nav').textContent = "$1,234,567.89"; // Mock
+        // TODO: Implement real data fetching for admin dashboard
 
-        // Mock Asset Dashboard
+        // Mock data
+        document.getElementById('admin-total-users').textContent = "123";
+        document.getElementById('admin-total-nav').textContent = "$1,234,567.89";
+
         const assetList = document.getElementById('asset-dashboard-list');
         assetList.innerHTML = `
-            <div class="value-item"><span>Gold:</span> <span>$500,000 (+2.5%)</span></div>
-            <div class="value-item"><span>Oil:</span> <span>$300,000 (-1.0%)</span></div>
+            <div class="flex justify-between"><span>Gold:</span> <span class="font-mono text-white">$500,000 (+2.5%)</span></div>
+            <div class="flex justify-between"><span>Oil:</span> <span class="font-mono text-white">$300,000 (-1.0%)</span></div>
+            <div class="flex justify-between"><span>USDC Reserve:</span> <span class="font-mono text-white">$434,567.89</span></div>
         `;
+
+        // --- NEW: Update the pie chart with mock data ---
+        const assetLabels = ['Gold', 'Oil', 'USDC Reserve'];
+        const assetData = [50, 30, 20]; // Percentages
+        createOrUpdatePieChart(assetLabels, assetData);
     };
 
     const token = api.getAccessToken();
@@ -55,4 +110,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         await updateAdminDashboardData(); // Use await
         setInterval(updateAdminDashboardData, 10000);
     }
+
+
 });

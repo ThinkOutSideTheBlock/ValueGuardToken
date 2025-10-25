@@ -6,13 +6,13 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
 
 from .models import GMXPosition, ProtocolState
-from .serializers import GMXPositionSerializer, HeartbeatSerializer, UpdateBasketWeightSerializer
+from .serializers import GMXPositionSerializer, HeartbeatSerializer, UpdateBasketWeightSerializer, SuccessStatusSerializer, UpdateWeightsSuccessSerializer, ErrorResponseSerializer
 from .services import OnChainService 
 from drf_spectacular.utils import extend_schema 
 
 log = structlog.get_logger(__name__)
 
-@extend_schema(tags=['Protocol'])
+@extend_schema(tags=['Protocol - Admin'])
 class GMXPositionViewSet(viewsets.ModelViewSet):
     """
     API endpoint for admins to manage GMX positions.
@@ -21,7 +21,16 @@ class GMXPositionViewSet(viewsets.ModelViewSet):
     serializer_class = GMXPositionSerializer
     permission_classes = [IsAdminUser]
 
-@extend_schema(tags=['Protocol'])
+@extend_schema(
+    tags=['Protocol - Admin'],
+    summary="Set AI Agent Heartbeat Interval",
+    description="Sets the heartbeat interval in seconds for the external AI data fetcher agent. This value is saved and also sent to the agent via a webhook.",
+    request=HeartbeatSerializer,
+    responses={
+        200: HeartbeatSerializer,
+        400: ErrorResponseSerializer,
+    }
+)
 class SetHeartbeatView(views.APIView):
     """
     API endpoint for admins to set the heartbeat interval.
@@ -46,7 +55,17 @@ class SetHeartbeatView(views.APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@extend_schema(tags=['Protocol'])
+@extend_schema(
+    tags=['Protocol - Admin'],
+    summary="Trigger Basket Weight Update",
+    description="Triggers an on-chain transaction to update the target weight of a specific asset in the basket. Performs a server-side validation to ensure the total weight of all assets remains 100% (10000 BPS).",
+    request=UpdateBasketWeightSerializer,
+    responses={
+        200: UpdateWeightsSuccessSerializer,
+        400: ErrorResponseSerializer,
+        500: ErrorResponseSerializer,
+    }
+)
 class TriggerUpdateWeightsView(views.APIView):
     """
     API endpoint for admins to trigger a rebalancing weight update.
@@ -66,8 +85,6 @@ class TriggerUpdateWeightsView(views.APIView):
         try:
             onchain_service = OnChainService()
 
-            # --- FULLY IMPLEMENTED WEIGHT VALIDATION ---
-            
             # 1. Get current total weights
             current_total_weights = onchain_service.get_total_basket_weights()
             log.info("Current total weight BPS.", total_weights=current_total_weights)

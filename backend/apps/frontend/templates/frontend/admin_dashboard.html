@@ -2,29 +2,53 @@
 {% load static %}
 
 {% block content %}
-<div class="dashboard">
-    <div class="card">
-        <h3>On-chain Dashboard</h3>
-        <div class="value-item"><span>Total Users:</span> <span id="admin-total-users">0</span></div>
-        <div class="value-item"><span>Total NAV on GMX:</span> <span id="admin-total-nav">$0.00</span></div>
-        <div class="value-item"><span>Total P&L on GMX:</span> <span id="admin-total-pnl">0.00%</span></div>
-        <div class="value-item"><span>Total Reserve in Treasury:</span> <span id="admin-treasury-reserve">$0.00</span>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Left Column -->
+    <div class="space-y-6">
+        <!-- On-chain Dashboard -->
+        <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+            <h3 class="text-xl font-semibold text-white mb-4 border-b border-gray-700 pb-2">On-chain Dashboard</h3>
+            <div class="space-y-3 text-gray-300">
+                <div class="flex justify-between"><span>Total Users:</span> <span id="admin-total-users"
+                        class="font-mono text-white">0</span></div>
+                <div class="flex justify-between"><span>Total NAV on GMX:</span> <span id="admin-total-nav"
+                        class="font-mono text-white">$0.00</span></div>
+                <div class="flex justify-between"><span>Total P&L on GMX:</span> <span id="admin-total-pnl"
+                        class="font-mono text-green-400">0.00%</span></div>
+                <div class="flex justify-between"><span>Total Reserve in Treasury:</span> <span
+                        id="admin-treasury-reserve" class="font-mono text-white">$0.00</span></div>
+            </div>
+        </div>
+        <!-- Set Heartbeat -->
+        <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+            <h3 class="text-xl font-semibold text-white mb-4">Set Heartbeat</h3>
+            <form id="heartbeat-form" class="flex items-center space-x-3">
+                <input type="number" id="heartbeat-seconds" placeholder="Seconds (e.g., 3600)" required min="300"
+                    class="bg-gray-700 text-white p-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button type="submit"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition">Submit</button>
+            </form>
+            <div id="heartbeat-status" class="mt-3 text-sm text-gray-400"></div>
         </div>
     </div>
-    <div class="card">
-        <h3>Asset Dashboard</h3>
-        <div id="asset-dashboard-list">
-            <!-- Asset data will be injected here by JS -->
+
+    <!-- Right Column -->
+    <div class="space-y-6">
+        <!-- Asset Dashboard -->
+        <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+            <h3 class="text-xl font-semibold text-white mb-4 border-b border-gray-700 pb-2">Asset Dashboard</h3>
+            <div id="asset-dashboard-list" class="space-y-3 text-gray-300">
+                <!-- Asset data will be injected here by JS -->
+            </div>
+        </div>
+        <!-- Pie Chart -->
+        <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+            <h3 class="text-xl font-semibold text-white mb-4">Asset Allocation</h3>
+            <div class="w-full max-w-sm mx-auto">
+                <canvas id="asset-pie-chart"></canvas>
+            </div>
         </div>
     </div>
-</div>
-<div class="card" style="margin-top: 20px;">
-    <h3>Set Heartbeat</h3>
-    <form id="heartbeat-form">
-        <input type="number" id="heartbeat-seconds" placeholder="e.g., 3600" required min="300">
-        <button type="submit">Submit</button>
-    </form>
-    <div id="heartbeat-status" style="margin-top: 10px;"></div>
 </div>
 {% endblock %}
 

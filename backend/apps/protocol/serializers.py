@@ -17,3 +17,18 @@ class HeartbeatSerializer(serializers.Serializer):
 class UpdateBasketWeightSerializer(serializers.Serializer):
     basketIndex = serializers.IntegerField(min_value=0)
     newWeightBps = serializers.IntegerField(min_value=0, max_value=10000) # Basis points (0-10000)
+
+class SuccessStatusSerializer(serializers.Serializer):
+    """A generic serializer for a simple success status message."""
+    status = serializers.CharField()
+
+class UpdateWeightsSuccessSerializer(serializers.Serializer):
+    """Serializer for the successful response of the TriggerUpdateWeightsView."""
+    status = serializers.CharField()
+    transactionHash = serializers.CharField()
+    basketIndex = serializers.IntegerField()
+    newWeightBps = serializers.IntegerField()
+
+class ErrorResponseSerializer(serializers.Serializer):
+    """A generic serializer for error responses."""
+    error = serializers.CharField()
