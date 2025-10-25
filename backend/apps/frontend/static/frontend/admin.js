@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const response = await api.fetchWithAuth('/api/v1/protocol/admin/set-heartbeat/', {
                 method: 'POST',
-                body: JSON.stringify({ heartbeatSeconds: parseInt(seconds) }),
+                body: JSON.stringify({ heartbeat_seconds: parseInt(seconds) }),
             });
 
             // --- IMPROVEMENT: Check response content type before parsing ---

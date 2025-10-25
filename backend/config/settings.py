@@ -37,7 +37,8 @@ elif not SECRET_KEY:
     SECRET_KEY = "django-insecure-development-fallback-key"
 
 # DEBUG mode is only enabled in development.
-DEBUG = APP_MODE == AppMode.DEVELOPMENT
+# DEBUG = APP_MODE == AppMode.DEVELOPMENT
+DEBUG = os.environ.get('DEBUG') == 'true'
 
 _ALLOWED_HOSTS_RAW = os.getenv("ALLOWED_HOSTS", "")
 if APP_MODE == AppMode.PRODUCTION:

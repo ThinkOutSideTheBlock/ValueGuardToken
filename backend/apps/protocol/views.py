@@ -5,6 +5,8 @@ from rest_framework import viewsets, views, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
 
+from apps.core.permissions import IsAdminRole
+
 from .models import GMXPosition, ProtocolState
 from .serializers import GMXPositionSerializer, HeartbeatSerializer, UpdateBasketWeightSerializer, SuccessStatusSerializer, UpdateWeightsSuccessSerializer, ErrorResponseSerializer
 from .services import OnChainService 
@@ -19,7 +21,7 @@ class GMXPositionViewSet(viewsets.ModelViewSet):
     """
     queryset = GMXPosition.objects.all()
     serializer_class = GMXPositionSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminRole]
 
 @extend_schema(
     tags=['Protocol - Admin'],
@@ -35,14 +37,14 @@ class SetHeartbeatView(views.APIView):
     """
     API endpoint for admins to set the heartbeat interval.
     """
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminRole]
 
     def post(self, request, *args, **kwargs):
         state, _ = ProtocolState.objects.get_or_create(pk="a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11") # Singleton ID
         serializer = HeartbeatSerializer(instance=state, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            log.info("Heartbeat updated", seconds=serializer.data['heartbeatSeconds'])
+            log.info("Heartbeat updated", seconds=serializer.data['heartbeat_seconds'])
             
             # Call the data fetcher AI agent API
             try:
@@ -70,7 +72,7 @@ class TriggerUpdateWeightsView(views.APIView):
     """
     API endpoint for admins to trigger a rebalancing weight update.
     """
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminRole]
 
     def post(self, request, *args, **kwargs):
         log.info("Admin triggered weight update process.")
