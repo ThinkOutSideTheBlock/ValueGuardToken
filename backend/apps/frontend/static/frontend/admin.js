@@ -13,18 +13,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 body: JSON.stringify({ heartbeat_seconds: parseInt(seconds) }),
             });
 
-            // --- IMPROVEMENT: Check response content type before parsing ---
             const contentType = response.headers.get("content-type");
             if (response.ok && contentType && contentType.indexOf("application/json") !== -1) {
-                // If the response is JSON, you can parse it (though this endpoint might not return a body)
                 heartbeatStatus.textContent = `Success! Heartbeat set to ${seconds} seconds.`;
             } else if (response.ok) {
-                // Handle successful but non-JSON responses (e.g., 204 No Content)
                 heartbeatStatus.textContent = `Success! Heartbeat set to ${seconds} seconds. (Status: ${response.status})`;
             }
             else {
-                // If we get here, it's likely an HTML error page
-                const errorText = await response.text(); // Read the response as text
+                const errorText = await response.text();
                 console.error("Server returned non-JSON response:", errorText);
                 heartbeatStatus.textContent = `Error: Server returned an unexpected response (Status: ${response.status}). Check console for details.`;
             }
@@ -96,7 +92,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div class="flex justify-between"><span>USDC Reserve:</span> <span class="font-mono text-white">$434,567.89</span></div>
         `;
 
-        // --- NEW: Update the pie chart with mock data ---
         const assetLabels = ['Gold', 'Oil', 'USDC Reserve'];
         const assetData = [50, 30, 20]; // Percentages
         createOrUpdatePieChart(assetLabels, assetData);
@@ -107,7 +102,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         alert("Authentication required. Please connect your wallet on the main page.");
         window.location.href = "/";
     } else {
-        await updateAdminDashboardData(); // Use await
+        await updateAdminDashboardData();
         setInterval(updateAdminDashboardData, 10000);
     }
 

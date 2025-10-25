@@ -1,23 +1,6 @@
 
 document.addEventListener('DOMContentLoaded', () => {
-    // --- CONFIGURATION ---
-    // const djangoDataElement = document.getElementById('django-data');
 
-    // if (!djangoDataElement) {
-    //     console.log("No 'django-data' element found on this page. Exiting main.js initialization.");
-    //     return;
-    // }
-
-    // const djangoData = JSON.parse(djangoDataElement.textContent);
-    // const supportedTokens = djangoData.tokens;
-    // const vaultManagerAddress = djangoData.vaultManagerAddress;
-
-    // const vaultManagerABI = [
-    //     "function createMintIntent(address depositAsset, uint256 depositAmount) external payable returns (bytes32 intentId)",
-    //     "function createRedeemIntent(uint256 shieldAmount, address outputAsset) external payable returns (bytes32 intentId)"
-    // ];
-
-    // --- ELEMENT SELECTORS ---
     const tabMint = document.getElementById('tab-mint');
     const tabRedeem = document.getElementById('tab-redeem');
     const panelMint = document.getElementById('panel-mint');
@@ -30,9 +13,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const redeemBtn = document.getElementById('redeem-action-btn');
     const txStatus = document.getElementById('tx-status');
 
-    // --- TAB LOGIC ---
+    const basketManagerAddress = "0x1c9fD50dF7a4f066884b58A05D91e4b55005876A";
+    const vaultManagerAddress = "0x1c9fD50dF7a4f066884b58A05D91e4b55005876A";
+
+
+    const basketManagerABI = [
+        "function totalSupply() view returns (uint256)",
+        "function balanceOf(address) view returns (uint256)",
+        // TODO: Add the ABI for the function that returns totalManagedValue (NAV)
+        // "function totalManagedValue() view returns (uint256)" 
+    ];
+
+    const vaultManagerABI = [
+        "function createMintIntent(address depositAsset, uint256 depositAmount) external payable returns (bytes32 intentId)",
+        "function createRedeemIntent(uint256 shieldAmount, address outputAsset) external payable returns (bytes32 intentId)"
+    ];
+
     const switchTab = (activeTab) => {
-        if (!tabMint || !tabRedeem) return; // Safety check
+        if (!tabMint || !tabRedeem) return;
 
         if (activeTab === 'mint') {
             tabMint.classList.add('bg-gray-700', 'text-white');
@@ -54,34 +52,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (tabMint && tabRedeem) {
         tabMint.addEventListener('click', () => switchTab('mint'));
         tabRedeem.addEventListener('click', () => switchTab('redeem'));
-        // Set default active tab
         switchTab('mint');
     }
-
-    // --- INITIALIZATION ---
-    // const initialize = () => {
-    //     // Populate dropdowns
-    //     supportedTokens.forEach(token => {
-    //         mintTokenSelect.innerHTML += `<option value="${token.address}">${token.symbol}</option>`;
-    //         redeemTokenSelect.innerHTML += `<option value="${token.address}">${token.symbol}</option>`;
-    //     });
-    //     // Set default active tab
-    //     switchTab('mint');
-    // };
-    // initialize();
 
     const djangoDataElement = document.getElementById('django-data');
     if (djangoDataElement) {
         const djangoData = JSON.parse(djangoDataElement.textContent);
         const supportedTokens = djangoData.tokens;
-        const vaultManagerAddress = djangoData.vaultManagerAddress;
 
-        const vaultManagerABI = [
-            "function createMintIntent(address depositAsset, uint256 depositAmount) external payable returns (bytes32 intentId)",
-            "function createRedeemIntent(uint256 shieldAmount, address outputAsset) external payable returns (bytes32 intentId)"
-        ];
 
-        // Populate dropdowns
+
         if (mintTokenSelect && redeemTokenSelect) {
             supportedTokens.forEach(token => {
                 mintTokenSelect.innerHTML += `<option value="${token.address}">${token.symbol}</option>`;
@@ -89,7 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // --- ON-CHAIN ACTION LOGIC ---
         const getSignerAndContract = () => {
             if (!wallet.getAddress() || !api.getAccessToken()) {
                 alert("Please connect your wallet first.");
@@ -165,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // await approveTx.wait();
 
                     const tx = await contract.createRedeemIntent(amountInWei, outputTokenAddress, {
-                        // TODO: You may need to pass an execution fee as `value`
+                        // todo
                     });
 
                     txStatus.textContent = `Transaction sent! Waiting for confirmation... (Hash: ${tx.hash.substring(0, 10)}...)`;
@@ -180,23 +159,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const updateDashboardData = async () => {
-            const address = await wallet.getAddress(); // Use await
+            const address = await wallet.getAddress();
             const token = api.getAccessToken();
 
-            if (!address || !token) { // Check both
+            if (!address || !token) {
                 console.log("User not connected, skipping data fetch on main page.");
                 return;
             }
 
             console.log("Updating main dashboard data...");
             // TODO: Replace with real contract addresses and ABIs
-            const basketManagerAddress = "0x..."; // Replace with your mock contract address
-            const basketManagerABI = [
-                "function totalSupply() view returns (uint256)",
-                "function balanceOf(address) view returns (uint256)",
-                // TODO: Add the ABI for the function that returns totalManagedValue (NAV)
-                // "function totalManagedValue() view returns (uint256)" 
-            ];
+
 
             try {
                 const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -206,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const nav = ethers.utils.parseEther("1234567.89"); // Mock NAV
                 const [totalSupply, userSupply] = await Promise.all([
                     contract.totalSupply(),
-                    contract.balanceOf(address) // Pass the address here
+                    contract.balanceOf(address)
                 ]);
 
                 // Update basket dashboard

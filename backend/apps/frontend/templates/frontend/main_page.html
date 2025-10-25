@@ -31,60 +31,57 @@
                     class="font-mono text-red-400">0.00%</span></div>
         </div>
     </div>
-    <div class="mt-8 max-w-lg mx-auto bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-        <!-- Tab Headers -->
-        <div class="flex border-b border-gray-700">
-            <button id="tab-mint"
-                class="tab-btn flex-1 py-3 px-4 text-lg font-semibold text-white bg-gray-700 transition">Mint</button>
-            <button id="tab-redeem"
-                class="tab-btn flex-1 py-3 px-4 text-lg font-semibold text-gray-500 transition">Redeem</button>
-        </div>
-
-        <!-- Tab Content -->
-        <div class="p-6">
-            <!-- Mint Panel -->
-            <div id="panel-mint" class="tab-panel">
-                <div class="space-y-4">
-                    <div>
-                        <label for="mint-token-select" class="block text-sm font-medium text-gray-300 mb-1">Select Token
-                            to Deposit</label>
-                        <select id="mint-token-select"
-                            class="w-full bg-gray-700 text-white p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
-                    </div>
-                    <div>
-                        <label for="mint-amount" class="block text-sm font-medium text-gray-300 mb-1">Amount</label>
-                        <input type="number" id="mint-amount" placeholder="0.0"
-                            class="w-full bg-gray-700 text-white p-2 rounded-md font-mono focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <button id="mint-action-btn"
-                        class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg text-lg transition">Mint
-                        VGT</button>
+</div>
+<div class="mt-8 max-w-lg mx-auto bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+    <!-- Tab Headers -->
+    <div class="flex border-b border-gray-700">
+        <button id="tab-mint"
+            class="tab-btn flex-1 py-3 px-4 text-lg font-semibold text-white bg-gray-700 transition">Mint</button>
+        <button id="tab-redeem"
+            class="tab-btn flex-1 py-3 px-4 text-lg font-semibold text-gray-500 transition">Redeem</button>
+    </div>
+    <!-- Tab Content -->
+    <div class="p-6">
+        <!-- Mint Panel -->
+        <div id="panel-mint" class="tab-panel">
+            <div class="space-y-4">
+                <div>
+                    <label for="mint-token-select" class="block text-sm font-medium text-gray-300 mb-1">Select Token
+                        to Deposit</label>
+                    <select id="mint-token-select"
+                        class="w-full bg-gray-700 text-white p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
                 </div>
-            </div>
-
-            <!-- Redeem Panel (Initially hidden) -->
-            <div id="panel-redeem" class="tab-panel hidden">
-                <div class="space-y-4">
-                    <div>
-                        <label for="redeem-amount" class="block text-sm font-medium text-gray-300 mb-1">Amount of VGT to
-                            Redeem</label>
-                        <input type="number" id="redeem-amount" placeholder="0.0"
-                            class="w-full bg-gray-700 text-white p-2 rounded-md font-mono focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label for="redeem-token-select" class="block text-sm font-medium text-gray-300 mb-1">Select
-                            Token to Receive</label>
-                        <select id="redeem-token-select"
-                            class="w-full bg-gray-700 text-white p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
-                    </div>
-                    <button id="redeem-action-btn"
-                        class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg text-lg transition">Redeem</button>
+                <div>
+                    <label for="mint-amount" class="block text-sm font-medium text-gray-300 mb-1">Amount</label>
+                    <input type="number" id="mint-amount" placeholder="0.0"
+                        class="w-full bg-gray-700 text-white p-2 rounded-md font-mono focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
+                <button id="mint-action-btn"
+                    class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg text-lg transition">Mint
+                    VGT</button>
             </div>
-
-            <!-- Status message area -->
-            <div id="tx-status" class="mt-4 text-center text-gray-400 text-sm h-5"></div>
         </div>
+        <!-- Redeem Panel (Initially hidden) -->
+        <div id="panel-redeem" class="tab-panel hidden">
+            <div class="space-y-4">
+                <div>
+                    <label for="redeem-amount" class="block text-sm font-medium text-gray-300 mb-1">Amount of VGT to
+                        Redeem</label>
+                    <input type="number" id="redeem-amount" placeholder="0.0"
+                        class="w-full bg-gray-700 text-white p-2 rounded-md font-mono focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="redeem-token-select" class="block text-sm font-medium text-gray-300 mb-1">Select
+                        Token to Receive</label>
+                    <select id="redeem-token-select"
+                        class="w-full bg-gray-700 text-white p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
+                </div>
+                <button id="redeem-action-btn"
+                    class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg text-lg transition">Redeem</button>
+            </div>
+        </div>
+        <!-- Status message area -->
+        <div id="tx-status" class="mt-4 text-center text-gray-400 text-sm h-5"></div>
     </div>
 </div>
 {% endblock %}
