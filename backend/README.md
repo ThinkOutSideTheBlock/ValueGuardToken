@@ -29,6 +29,10 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+```bash
+cp .env.example.dev .env
+```
+
 **3. Initialize the Database**
 
 ```bash
@@ -49,6 +53,10 @@ python manage.py runserver
 ```
 
 **3.2. Build and Start All Containers**
+
+```bash
+cp .env.example.dev .env
+```
 
 ```bash
 ENV_FILE=.env docker-compose -f docker-compose.production.yml --env-file .env -p backend-prod up -d --build
