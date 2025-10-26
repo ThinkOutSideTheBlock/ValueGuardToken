@@ -10,6 +10,11 @@ services:
     restart: unless-stopped
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB} -h $${POSTGRES_HOST}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   redis:
     image: redis:7-alpine
@@ -24,9 +29,12 @@ services:
         - env_file
     # The default CMD from the Dockerfile will be used, which is Gunicorn.
     # command: gunicorn config.wsgi:application --bind 0.0.0.0:8000
+    env_file:
+      - ${ENV_FILE}  
     volumes:
       - ${ENV_FILE}:/app/.env:ro 
       - /var/log/backend-web-mobile-app/dev/django_app:/app/logs
+      - ./abi:/app/abi:ro
     ports:
       - "${EX_WEB_PORT}:8000"
     depends_on:
@@ -36,18 +44,73 @@ services:
     networks:
       - app-network
 
-  celery:
+  celery-worker:
     build:
         context: .
         secrets:
-          - env_file
+        - env_file
+    # We need to override the default command for the celery worker.
+    env_file:
+      - ${ENV_FILE}  
     command: celery -A config worker -l info
     volumes:
       - ${ENV_FILE}:/app/.env:ro
       - /var/log/backend-web-mobile-app/dev/celery_worker:/app/logs
+      - ./abi:/app/abi:ro
     depends_on:
-      - db
-      - redis
+      web:
+        condition: service_started
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  celery-beat:
+    build:
+        context: .
+        secrets:
+        - env_file
+    # We need to override the default command for the celery worker.
+    env_file:
+      - ${ENV_FILE}  
+    command: celery -A config beat -l info
+    volumes:
+      - ${ENV_FILE}:/app/.env:ro
+      - /var/log/backend-web-mobile-app/dev/celery_worker:/app/logs
+      - ./abi:/app/abi:ro
+    depends_on:
+      web:
+        condition: service_started
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  event-listener:
+    build:
+      context: .
+      secrets:
+        - env_file
+    env_file:
+      - ${ENV_FILE}
+    command: python manage.py listen_for_events
+    volumes:
+      - ${ENV_FILE}:/app/.env:ro
+      - /var/log/backend-web-mobile-app/dev/event_listener:/app/logs
+      - ./abi:/app/abi:ro
+    depends_on:
+      web:
+        condition: service_started
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
     restart: unless-stopped
     networks:
       - app-network
