@@ -1,3 +1,5 @@
 ﻿backend/.env.production
 backend/.env.dev
 backend/.wake
+.vscode/settings.json
+.wake
